@@ -15,6 +15,8 @@ var rootCmd = &cobra.Command{
 This tool helps you create and manage Git worktrees more efficiently.`,
 }
 
+var commonWorktreeDir string
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

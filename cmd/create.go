@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var commonWorktreeDir string
-
 var createCmd = &cobra.Command{
 	Use:   "create [branch-name]",
 	Short: "Create a new branch and a new worktree",
@@ -46,23 +44,18 @@ var createCmd = &cobra.Command{
 		// Construct the worktree path
 		worktreePath := filepath.Join(commonWorktreeDir, orgRepo, branchName)
 
-		fmt.Printf("Creating new branch '%s' and worktree at '%s'\n", branchName, worktreePath)
+		
 
-		// Create the new branch
-		cmdBranch := exec.Command("git", "branch", branchName)
-		cmdBranch.Dir = gitRoot // Ensure command runs in the git root
-		if err := cmdBranch.Run(); err != nil {
-			fmt.Printf("Error creating branch '%s': %v\n", branchName, err)
-			return
-		}
+		
 
 		// Create the new worktree
-		cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
-		cmdWorktree.Dir = gitRoot // Ensure command runs in the git root
-		if err := cmdWorktree.Run(); err != nil {
-			fmt.Printf("Error creating worktree at '%s': %v\n", worktreePath, err)
-			return
-		}
+        cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
+        cmdWorktree.Dir = gitRoot // Ensure command runs in the git root
+        out, err := cmdWorktree.CombinedOutput()
+        if err != nil {
+            fmt.Printf("Error creating worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
+            return
+        }
 
 		fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
 	},
