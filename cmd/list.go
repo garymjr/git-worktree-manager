@@ -29,7 +29,7 @@ var listCmd = &cobra.Command{
 		}
 
 		lines := strings.Split(string(output), "\n")
-		
+
 		fmt.Println("Git Worktrees:")
 		for i := 0; i < len(lines); i++ {
 			line := strings.TrimSpace(lines[i])
@@ -39,7 +39,7 @@ var listCmd = &cobra.Command{
 
 			if strings.HasPrefix(line, "worktree ") {
 				worktreePath := strings.TrimPrefix(line, "worktree ")
-				
+
 				// Read the next lines for branch and HEAD
 				var branch string
 				var isHead bool
@@ -75,8 +75,4 @@ var listCmd = &cobra.Command{
 			}
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(listCmd)
 }

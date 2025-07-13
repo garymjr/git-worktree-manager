@@ -62,7 +62,7 @@ var removeCmd = &cobra.Command{
 			return
 		} else if err != nil {
 			fmt.Printf("Error checking worktree path '%s': %v\n", worktreePath, err)
-			return	
+			return
 		}
 
 		// Remove the worktree
@@ -106,7 +106,6 @@ var removeCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(removeCmd)
 	removeCmd.Flags().BoolVarP(&removeBranch, "remove-branch", "b", false, "Also remove the associated Git branch")
 	removeCmd.Flags().BoolVarP(&forceRemove, "force", "f", false, "Force removal of the worktree and/or branch")
 

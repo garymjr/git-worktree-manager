@@ -14,9 +14,9 @@ import (
 var silent bool
 
 var switchCmd = &cobra.Command{
-	Use:	"switch [branch-name]",
-	Short:	"Switch to an existing worktree",
-	Args:	cobra.ExactArgs(1),
+	Use:   "switch [branch-name]",
+	Short: "Switch to an existing worktree",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		branchName := args[0]
 
@@ -87,7 +87,6 @@ var switchCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(switchCmd)
 	// Add the worktree-dir flag to the switch command as well
 	defaultWorktreeDir := getDefaultWorktreeDir()
 	if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {

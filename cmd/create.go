@@ -10,7 +10,7 @@ import (
 )
 
 var createCmd = &cobra.Command{
-	Use:   "create [branch-name]",
+	Use:   "new [branch-name]",
 	Short: "Create a new branch and a new worktree",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -42,32 +42,25 @@ var createCmd = &cobra.Command{
 		// Construct the worktree path
 		worktreePath := filepath.Join(commonWorktreeDir, orgRepo, branchName)
 
-		
-
-		
-
 		// Create the new worktree
-        cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
-        cmdWorktree.Dir = gitRoot // Ensure command runs in the git root
-        out, err := cmdWorktree.CombinedOutput()
-        if err != nil {
-            fmt.Printf("Error creating worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
-            return
-        }
+		cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
+		cmdWorktree.Dir = gitRoot // Ensure command runs in the git root
+		out, err := cmdWorktree.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Error creating worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
+			return
+		}
 
 		fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(createCmd)
-}
-
 // parseRemoteURL parses the remote URL to extract the organization/username and repository name.
 // It handles both HTTPS and SSH URLs.
 // Examples:
-//   https://github.com/owner/repo.git -> owner/repo
-//   git@github.com:owner/repo.git -> owner/repo
+//
+//	https://github.com/owner/repo.git -> owner/repo
+//	git@github.com:owner/repo.git -> owner/repo
 func parseRemoteURL(url string) string {
 	// Remove .git suffix if present
 	url = strings.TrimSuffix(url, ".git")
@@ -88,4 +81,3 @@ func parseRemoteURL(url string) string {
 
 	return ""
 }
-
