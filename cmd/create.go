@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -62,13 +60,7 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	defaultWorktreeDir := getDefaultWorktreeDir()
-	if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
-		defaultWorktreeDir = envVar
-	}
-
 	rootCmd.AddCommand(createCmd)
-	createCmd.Flags().StringVarP(&commonWorktreeDir, "worktree-dir", "w", defaultWorktreeDir, "Base directory for new worktrees")
 }
 
 // parseRemoteURL parses the remote URL to extract the organization/username and repository name.
@@ -97,24 +89,3 @@ func parseRemoteURL(url string) string {
 	return ""
 }
 
-// getDefaultWorktreeDir returns the default worktree directory based on the operating system.
-func getDefaultWorktreeDir() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		// Fallback if home directory cannot be determined
-		return "/tmp/git-worktrees"
-	}
-
-	switch runtime.GOOS {
-	case "windows":
-		appData := os.Getenv("LOCALAPPDATA")
-		if appData == "" {
-			return filepath.Join(homeDir, "AppData", "Local", "git-worktree-manager")
-		}
-		return filepath.Join(appData, "git-worktree-manager")
-	case "darwin", "linux":
-		return filepath.Join(homeDir, ".local", "git-worktree-manager")
-	default:
-		return filepath.Join(homeDir, ".git-worktree-manager")
-	}
-}
