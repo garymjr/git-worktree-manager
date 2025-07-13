@@ -16,9 +16,9 @@ func init() {
 }
 
 var createCmd = &cobra.Command{
-	Use:     "new [branch-name]",
+	Use:     "create [branch-name]",
 	Short:   "Create a new branch and a new worktree",
-	Aliases: []string{"n"},
+	Aliases: []string{"n", "new"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		branchName := args[0]
@@ -60,11 +60,11 @@ var createCmd = &cobra.Command{
 
 		fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
 
-        if !noSwitch {
-            // Call the switch logic
-            SwitchToWorktree(branchName, orgRepo, commonWorktreeDir, false)
-        }
-    },
+		if !noSwitch {
+			// Call the switch logic
+			SwitchToWorktree(branchName, orgRepo, commonWorktreeDir, false)
+		}
+	},
 }
 
 // parseRemoteURL parses the remote URL to extract the organization/username and repository name.
