@@ -9,7 +9,7 @@ This tool provides commands to create, list, remove, and switch between git work
 ### Create a new worktree
 
 ```bash
-git-worktree-manager create <branch_name> [path]
+git-worktree-manager create <branch_name>
 ```
 
 ### List worktrees
@@ -21,7 +21,7 @@ git-worktree-manager list
 ### Remove a worktree
 
 ```bash
-git-worktree-manager remove <path>
+git-worktree-manager remove <branch_name>
 ```
 
 ### Switch to a worktree
