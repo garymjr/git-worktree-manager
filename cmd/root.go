@@ -15,6 +15,7 @@ var rootCmd = &cobra.Command{
 	Long: `A CLI tool for managing Git worktrees.
 
 This tool helps you create and manage Git worktrees more efficiently.`,
+	Aliases: []string{"h"},
 }
 
 var commonWorktreeDir string

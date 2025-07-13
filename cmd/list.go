@@ -9,8 +9,9 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all git worktrees and their branches",
+	Use:     "list",
+	Short:   "List all git worktrees and their branches",
+	Aliases: []string{"ls"},
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get the current working directory to identify the active worktree
 		currentDir, err := exec.Command("pwd").Output()

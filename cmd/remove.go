@@ -14,9 +14,10 @@ var removeBranch bool
 var forceRemove bool
 
 var removeCmd = &cobra.Command{
-	Use:   "remove [branch-name]",
-	Short: "Remove an existing worktree",
-	Args:  cobra.ExactArgs(1),
+	Use:     "remove [branch-name]",
+	Short:   "Remove an existing worktree",
+	Aliases: []string{"rm"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		branchName := args[0]
 

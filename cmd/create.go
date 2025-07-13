@@ -16,9 +16,10 @@ func init() {
 }
 
 var createCmd = &cobra.Command{
-	Use:   "new [branch-name]",
-	Short: "Create a new branch and a new worktree",
-	Args:  cobra.ExactArgs(1),
+	Use:     "new [branch-name]",
+	Short:   "Create a new branch and a new worktree",
+	Aliases: []string{"n"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		branchName := args[0]
 

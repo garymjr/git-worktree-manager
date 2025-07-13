@@ -14,9 +14,10 @@ import (
 var silent bool
 
 var switchCmd = &cobra.Command{
-	Use:   "switch [branch-name]",
-	Short: "Switch to an existing worktree",
-	Args:  cobra.ExactArgs(1),
+	Use:     "switch [branch-name]",
+	Short:   "Switch to an existing worktree",
+	Aliases: []string{"s"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		branchName := args[0]
 
