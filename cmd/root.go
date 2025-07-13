@@ -27,7 +27,7 @@ func Execute() {
 }
 
 func init() {
-	defaultWorktreeDir := getDefaultWorktreeDir()
+	defaultWorktreeDir := GetDefaultWorktreeDir()
 	if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
 		defaultWorktreeDir = envVar
 	}
@@ -40,7 +40,7 @@ func init() {
 }
 
 // getDefaultWorktreeDir returns the default worktree directory based on the operating system.
-func getDefaultWorktreeDir() string {
+func GetDefaultWorktreeDir() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		// Fallback if home directory cannot be determined

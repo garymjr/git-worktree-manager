@@ -37,14 +37,14 @@ var removeCmd = &cobra.Command{
 		remoteURL := strings.TrimSpace(string(remoteURLBytes))
 
 		// Parse organization/username and repo name from remote URL
-		orgRepo := parseRemoteURL(remoteURL)
+		orgRepo := ParseRemoteURL(remoteURL)
 		if orgRepo == "" {
 			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
 			return
 		}
 
 		// Determine the common worktree directory (same logic as create command)
-		defaultWorktreeDir := getDefaultWorktreeDir()
+		defaultWorktreeDir := GetDefaultWorktreeDir()
 		if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
 			defaultWorktreeDir = envVar
 		}
@@ -110,7 +110,7 @@ func init() {
 	removeCmd.Flags().BoolVarP(&forceRemove, "force", "f", false, "Force removal of the worktree and/or branch")
 
 	// Add the worktree-dir flag to the remove command as well
-	defaultWorktreeDir := getDefaultWorktreeDir()
+	defaultWorktreeDir := GetDefaultWorktreeDir()
 	if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
 		defaultWorktreeDir = envVar
 	}

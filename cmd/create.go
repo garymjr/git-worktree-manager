@@ -9,6 +9,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var noSwitch bool
+
+func init() {
+	createCmd.Flags().BoolVar(&noSwitch, "no-switch", false, "Do not switch to the new worktree after creation")
+}
+
 var createCmd = &cobra.Command{
 	Use:   "new [branch-name]",
 	Short: "Create a new branch and a new worktree",
@@ -33,7 +39,7 @@ var createCmd = &cobra.Command{
 		remoteURL := strings.TrimSpace(string(remoteURLBytes))
 
 		// Parse organization/username and repo name from remote URL
-		orgRepo := parseRemoteURL(remoteURL)
+		orgRepo := ParseRemoteURL(remoteURL)
 		if orgRepo == "" {
 			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
 			return
@@ -52,7 +58,12 @@ var createCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
-	},
+
+        if !noSwitch {
+            // Call the switch logic
+            SwitchToWorktree(branchName, orgRepo, commonWorktreeDir, false)
+        }
+    },
 }
 
 // parseRemoteURL parses the remote URL to extract the organization/username and repository name.
@@ -61,7 +72,7 @@ var createCmd = &cobra.Command{
 //
 //	https://github.com/owner/repo.git -> owner/repo
 //	git@github.com:owner/repo.git -> owner/repo
-func parseRemoteURL(url string) string {
+func ParseRemoteURL(url string) string {
 	// Remove .git suffix if present
 	url = strings.TrimSuffix(url, ".git")
 
