@@ -1,4 +1,4 @@
-module github.com/your-username/git-worktree-manager
+module github.com/garymjr/git-worktree-manager
 
 go 1.24.5
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/your-username/git-worktree-manager/cmd"
+	"github.com/garymjr/git-worktree-manager/cmd"
 )
 
 func main() {
