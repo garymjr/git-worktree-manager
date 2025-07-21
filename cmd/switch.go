@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,21 @@ var switchCmd = &cobra.Command{
 			return
 		}
 
+		// Initialize state manager
+		stateManager, err := state.NewStateManager()
+		if err != nil {
+			fmt.Printf("Error initializing state manager: %v\n", err)
+			return
+		}
+
+		// Try to get worktree from state first
+		entry, exists := stateManager.GetWorktree(orgRepo, branchName)
+		if exists {
+			SwitchToWorktreeByPath(entry.Path, silent)
+			return
+		}
+
+		// Fallback to old behavior if not found in state
 		// Determine the common worktree directory (same logic as create command)
 		defaultWorktreeDir := GetDefaultWorktreeDir()
 		if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
@@ -57,6 +73,45 @@ func init() {
 	}
 	switchCmd.Flags().StringVarP(&commonWorktreeDir, "worktree-dir", "w", defaultWorktreeDir, "Base directory for new worktrees")
 	switchCmd.Flags().BoolVarP(&silent, "silent", "s", false, "Suppress output messages")
+}
+
+func SwitchToWorktreeByPath(worktreePath string, silent bool) {
+	// Check if the worktree directory exists
+	_, err := os.Stat(worktreePath)
+	if os.IsNotExist(err) {
+		fmt.Printf("Worktree not found at '%s'\n", worktreePath)
+		return
+	} else if err != nil {
+		fmt.Printf("Error checking worktree path '%s': %v\n", worktreePath, err)
+		return
+	}
+
+	if !silent {
+		fmt.Printf("Switching to worktree at '%s'\n", worktreePath)
+	}
+
+	// Determine the user's shell
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		// Fallback for Windows or if SHELL is not set
+		if runtime.GOOS == "windows" {
+			shell = "cmd.exe"
+		} else {
+			shell = "bash"
+		}
+	}
+
+	// Execute a new shell in the worktree directory
+	cmdShell := exec.Command(shell)
+	cmdShell.Dir = worktreePath
+	cmdShell.Stdin = os.Stdin
+	cmdShell.Stdout = os.Stdout
+	cmdShell.Stderr = os.Stderr
+
+	if err := cmdShell.Run(); err != nil {
+		fmt.Printf("Error starting shell in worktree: %v\n", err)
+		return
+	}
 }
 
 func SwitchToWorktree(branchName string, orgRepo string, worktreeDir string, silent bool) {

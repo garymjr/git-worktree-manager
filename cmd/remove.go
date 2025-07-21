@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
 
@@ -42,19 +42,30 @@ var removeCmd = &cobra.Command{
 		if orgRepo == "" {
 			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
 			return
+	}
+
+		// Initialize state manager
+		stateManager, err := state.NewStateManager()
+		if err != nil {
+			fmt.Printf("Error initializing state manager: %v\n", err)
+			return
 		}
 
-		// Determine the common worktree directory (same logic as create command)
-		defaultWorktreeDir := GetDefaultWorktreeDir()
-		if envVar := os.Getenv("GIT_WORKTREE_MANAGER_DIR"); envVar != "" {
-			defaultWorktreeDir = envVar
-		}
-		// If the flag was set, it overrides everything
-		if cmd.Flags().Changed("worktree-dir") {
-			defaultWorktreeDir = commonWorktreeDir // commonWorktreeDir is populated by the flag
+		// Try to get worktree from state first
+		entry, exists := stateManager.GetWorktree(orgRepo, branchName)
+		if !exists {
+			// Fall back to old behavior if not found in state
+			fmt.Printf("Worktree for branch '%s' not registered\n", branchName)
+			return
 		}
 
-		worktreePath := filepath.Join(defaultWorktreeDir, orgRepo, branchName)
+		worktreePath := entry.Path
+
+		// Remove from state
+		err = stateManager.RemoveWorktree(orgRepo, branchName)
+		if err != nil {
+			fmt.Printf("Error removing worktree from state: %v\n", err)
+		}
 
 		// Check if the worktree directory exists before attempting to remove
 		_, err = os.Stat(worktreePath)

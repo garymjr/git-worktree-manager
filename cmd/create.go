@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
 
@@ -44,10 +45,24 @@ var createCmd = &cobra.Command{
 		if orgRepo == "" {
 			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
 			return
+	}
+
+		// Initialize state manager
+		stateManager, err := state.NewStateManager()
+		if err != nil {
+			fmt.Printf("Error initializing state manager: %v\n", err)
+			return
 		}
 
 		// Construct the worktree path
 		worktreePath := filepath.Join(commonWorktreeDir, orgRepo, branchName)
+
+		// Add worktree to state
+		err = stateManager.AddWorktree(worktreePath, orgRepo, branchName, remoteURL)
+		if err != nil {
+			fmt.Printf("Error adding worktree to state: %v\n", err)
+			return
+		}
 
 		// Create the new worktree
 		cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
