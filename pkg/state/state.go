@@ -11,12 +11,12 @@ import (
 
 // WorktreeEntry represents a single worktree registration
 type WorktreeEntry struct {
-	ID           string    `json:"id"`           // Unique identifier (orgRepo/branchName)
-	Path         string    `json:"path"`         // Full path to the worktree
-	GitRepo      string    `json:"git_repo"`     // Organization/repository name (e.g., "owner/repo")
-	BranchName   string    `json:"branch_name"`  // Branch name
-	RemoteURL    string    `json:"remote_url"`   // Git remote URL
-	CreatedAt    time.Time `json:"created_at"`   // When the worktree was created
+	ID           string    `json:"id"`            // Unique identifier (orgRepo/branchName)
+	Path         string    `json:"path"`          // Full path to the worktree
+	GitRepo      string    `json:"git_repo"`      // Organization/repository name (e.g., "owner/repo")
+	BranchName   string    `json:"branch_name"`   // Branch name
+	RemoteURL    string    `json:"remote_url"`    // Git remote URL
+	CreatedAt    time.Time `json:"created_at"`    // When the worktree was created
 	LastAccessed time.Time `json:"last_accessed"` // When the worktree was last accessed
 }
 
@@ -57,7 +57,7 @@ func NewStateManager() (*StateManager, error) {
 
 // getConfigPath returns the path to the configuration file
 func getConfigPath() (string, error) {
-	var configDir string
+	var newDir, oldDir string
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -65,32 +65,45 @@ func getConfigPath() (string, error) {
 
 	switch runtime.GOOS {
 	case "windows":
+		localAppData := os.Getenv("LocalAppData")
+		if localAppData == "" {
+			localAppData, _ = os.UserCacheDir()
+		}
+		newDir = filepath.Join(localAppData, "git-worktree-manager")
 		appData := os.Getenv("APPDATA")
 		if appData == "" {
-			configDir = filepath.Join(homeDir, "AppData", "Roaming")
-		} else {
-			configDir = appData
+			appData = filepath.Join(homeDir, "AppData", "Roaming")
 		}
-		configDir = filepath.Join(configDir, "git-worktree-manager")
-	case "darwin":
-		configDir = filepath.Join(homeDir, ".config", "git-worktree-manager")
-	case "linux":
-		xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
-		if xdgConfigHome != "" {
-			configDir = filepath.Join(xdgConfigHome, "git-worktree-manager")
-		} else {
-			configDir = filepath.Join(homeDir, ".config", "git-worktree-manager")
-		}
+		oldDir = filepath.Join(appData, "git-worktree-manager")
+	case "darwin", "linux":
+		newDir = filepath.Join(homeDir, ".local", "share", "git-worktree-manager")
+		oldDir = filepath.Join(homeDir, ".config", "git-worktree-manager")
 	default:
-		configDir = filepath.Join(homeDir, ".config", "git-worktree-manager")
+		newDir = filepath.Join(homeDir, ".local", "share", "git-worktree-manager")
+		oldDir = filepath.Join(homeDir, ".config", "git-worktree-manager")
 	}
 
-	// Ensure config directory exists
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	// Ensure new directory exists
+	if err := os.MkdirAll(newDir, 0755); err != nil {
 		return "", err
 	}
 
-	return filepath.Join(configDir, "state.json"), nil
+	newPath := filepath.Join(newDir, "state.json")
+	oldPath := filepath.Join(oldDir, "state.json")
+
+	// Migration logic: if old file exists and new file does not, move it
+	if _, errOld := os.Stat(oldPath); errOld == nil {
+		if _, errNew := os.Stat(newPath); os.IsNotExist(errNew) {
+			errMv := os.Rename(oldPath, newPath)
+			if errMv == nil {
+				fmt.Printf("State file migrated from %s to %s\n", oldPath, newPath)
+			} else {
+				fmt.Printf("[ERROR] Failed to migrate state file: %v\n", errMv)
+			}
+		}
+	}
+
+	return newPath, nil
 }
 
 // load reads the state from disk
@@ -121,7 +134,7 @@ func (sm *StateManager) save() error {
 // AddWorktree registers a new worktree
 func (sm *StateManager) AddWorktree(path, gitRepo, branchName, remoteURL string) error {
 	id := filepath.Join(gitRepo, branchName)
-	
+
 	entry := WorktreeEntry{
 		ID:           id,
 		Path:         path,
@@ -179,21 +192,21 @@ func (sm *StateManager) ListWorktreesByRepo(gitRepo string) []WorktreeEntry {
 // CleanupStaleEntries removes entries for worktrees that no longer exist on disk
 func (sm *StateManager) CleanupStaleEntries() error {
 	toRemove := make([]string, 0)
-	
+
 	for id, entry := range sm.state.Worktrees {
 		if _, err := os.Stat(entry.Path); os.IsNotExist(err) {
 			toRemove = append(toRemove, id)
 		}
 	}
-	
+
 	for _, id := range toRemove {
 		delete(sm.state.Worktrees, id)
 	}
-	
+
 	if len(toRemove) > 0 {
 		return sm.save()
 	}
-	
+
 	return nil
 }
 
