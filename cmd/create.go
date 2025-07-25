@@ -10,15 +10,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var noSwitch bool
+var createBranch bool
 
 func init() {
-	createCmd.Flags().BoolVar(&noSwitch, "no-switch", false, "Do not switch to the new worktree after creation")
+	createCmd.Flags().BoolVarP(&createBranch, "create-branch", "b", false, "Create branch if it does not exist")
 }
 
 var createCmd = &cobra.Command{
 	Use:     "create [branch-name]",
-	Short:   "Create a new branch and a new worktree",
+	Short:   "Create a new worktree, optionally creating the branch if it does not exist",
 	Aliases: []string{"n", "new"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -45,7 +45,7 @@ var createCmd = &cobra.Command{
 		if orgRepo == "" {
 			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
 			return
-	}
+		}
 
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
@@ -64,21 +64,29 @@ var createCmd = &cobra.Command{
 			return
 		}
 
-		// Create the new worktree
-		cmdWorktree := exec.Command("git", "worktree", "add", "-b", branchName, worktreePath)
-		cmdWorktree.Dir = gitRoot // Ensure command runs in the git root
+		// Create the new worktree; only create the branch if requested
+		var cmdArgs []string
+		if createBranch {
+			cmdArgs = []string{"worktree", "add", "-b", branchName, worktreePath}
+		} else {
+			cmdArgs = []string{"worktree", "add", worktreePath, branchName}
+		}
+		cmdWorktree := exec.Command("git", cmdArgs...)
+		cmdWorktree.Dir = gitRoot
 		out, err := cmdWorktree.CombinedOutput()
 		if err != nil {
 			fmt.Printf("Error creating worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
 			return
 		}
 
-		fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
-
-		if !noSwitch {
-			// Call the switch logic
-			SwitchToWorktree(branchName, orgRepo, commonWorktreeDir, false)
+		if createBranch {
+			fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
+		} else {
+			fmt.Printf("Successfully created worktree for branch '%s' at '%s'\n", branchName, worktreePath)
 		}
+
+		// Switch to the new worktree
+		SwitchToWorktree(branchName, orgRepo, commonWorktreeDir, false)
 	},
 }
 

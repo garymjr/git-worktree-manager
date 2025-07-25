@@ -31,6 +31,12 @@ git-worktree-manager config
 git-worktree-manager create <branch_name>
 ```
 
+To create a new branch and worktree in one step, use the `-b`/`--create-branch` flag:
+
+```bash
+git-worktree-manager create -b <branch_name>
+```
+
 ### List Worktrees
 
 Displays both managed and unmanaged worktrees, indicating which is active.
