@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +22,7 @@ var commonWorktreeDir string
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("%v", err)
 	}
 }
 

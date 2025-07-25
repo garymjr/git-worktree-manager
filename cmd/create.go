@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +27,7 @@ var createCmd = &cobra.Command{
 		// Get the current Git repository root
 		gitRootBytes, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
 		if err != nil {
-			fmt.Printf("Error getting git repository root: %v\n", err)
+			log.Errorf("getting git repository root: %v", err)
 			return
 		}
 		gitRoot := strings.TrimSpace(string(gitRootBytes))
@@ -35,7 +35,7 @@ var createCmd = &cobra.Command{
 		// Get the remote URL
 		remoteURLBytes, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
 		if err != nil {
-			fmt.Printf("Error getting remote origin URL: %v\n", err)
+			log.Errorf("getting remote origin URL: %v", err)
 			return
 		}
 		remoteURL := strings.TrimSpace(string(remoteURLBytes))
@@ -43,14 +43,14 @@ var createCmd = &cobra.Command{
 		// Parse organization/username and repo name from remote URL
 		orgRepo := ParseRemoteURL(remoteURL)
 		if orgRepo == "" {
-			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
+			log.Errorf("could not parse organization/username and repository name from remote URL: %s", remoteURL)
 			return
 		}
 
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
@@ -60,7 +60,7 @@ var createCmd = &cobra.Command{
 		// Add worktree to state
 		err = stateManager.AddWorktree(worktreePath, orgRepo, branchName, remoteURL)
 		if err != nil {
-			fmt.Printf("Error adding worktree to state: %v\n", err)
+			log.Errorf("adding worktree to state: %v", err)
 			return
 		}
 
@@ -75,14 +75,14 @@ var createCmd = &cobra.Command{
 		cmdWorktree.Dir = gitRoot
 		out, err := cmdWorktree.CombinedOutput()
 		if err != nil {
-			fmt.Printf("Error creating worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
+			log.Errorf("creating worktree at '%s': %v\nOutput: %s", worktreePath, err, out)
 			return
 		}
 
 		if createBranch {
-			fmt.Printf("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
+			log.Infof("Successfully created branch '%s' and worktree at '%s'\n", branchName, worktreePath)
 		} else {
-			fmt.Printf("Successfully created worktree for branch '%s' at '%s'\n", branchName, worktreePath)
+			log.Infof("Successfully created worktree for branch '%s' at '%s'\n", branchName, worktreePath)
 		}
 
 		// Switch to the new worktree

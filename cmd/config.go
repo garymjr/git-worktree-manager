@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -15,17 +14,16 @@ var configCmd = &cobra.Command{
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
-		fmt.Println("Git Worktree Manager Configuration:")
-		fmt.Printf("State file location: %s\n", stateManager.GetConfigPath())
-		fmt.Printf("Total managed worktrees: %d\n", len(stateManager.ListWorktrees()))
-		
+		log.Infof("State file location: %s\n", stateManager.GetConfigPath())
+		log.Infof("Total managed worktrees: %d\n", len(stateManager.ListWorktrees()))
+
 		// Show fallback directory for legacy behavior
 		defaultDir := GetDefaultWorktreeDir()
-		fmt.Printf("Legacy default directory: %s\n", defaultDir)
+		log.Infof("Legacy default directory: %s\n", defaultDir)
 	},
 }
 

@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -25,21 +25,21 @@ var switchCmd = &cobra.Command{
 		// Get the remote URL
 		remoteURLBytes, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
 		if err != nil {
-			fmt.Printf("Error getting remote origin URL: %v\n", err)
+			log.Errorf("getting remote origin URL: %v", err)
 			return
 		}
 		remoteURL := strings.TrimSpace(string(remoteURLBytes))
 		// Parse organization/username and repo name from remote URL
 		orgRepo := ParseRemoteURL(remoteURL)
 		if orgRepo == "" {
-			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
+			log.Errorf("could not parse organization/username and repository name from remote URL: %s", remoteURL)
 			return
 		}
 
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
@@ -79,15 +79,15 @@ func SwitchToWorktreeByPath(worktreePath string, silent bool) {
 	// Check if the worktree directory exists
 	_, err := os.Stat(worktreePath)
 	if os.IsNotExist(err) {
-		fmt.Printf("Worktree not found at '%s'\n", worktreePath)
+		log.Warnf("worktree not found at '%s'", worktreePath)
 		return
 	} else if err != nil {
-		fmt.Printf("Error checking worktree path '%s': %v\n", worktreePath, err)
+		log.Errorf("checking worktree path '%s': %v", worktreePath, err)
 		return
 	}
 
 	if !silent {
-		fmt.Printf("Switching to worktree at '%s'\n", worktreePath)
+		log.Infof("Switching to worktree at '%s'\n", worktreePath)
 	}
 
 	// Determine the user's shell
@@ -109,7 +109,7 @@ func SwitchToWorktreeByPath(worktreePath string, silent bool) {
 	cmdShell.Stderr = os.Stderr
 
 	if err := cmdShell.Run(); err != nil {
-		fmt.Printf("Error starting shell in worktree: %v\n", err)
+		log.Errorf("starting shell in worktree: %v", err)
 		return
 	}
 }
@@ -120,15 +120,15 @@ func SwitchToWorktree(branchName string, orgRepo string, worktreeDir string, sil
 	// Check if the worktree directory exists
 	_, err := os.Stat(worktreePath)
 	if os.IsNotExist(err) {
-		fmt.Printf("Worktree for branch '%s' not found at '%s'\n", branchName, worktreePath)
+		log.Warnf("worktree for branch '%s' not found at '%s'", branchName, worktreePath)
 		return
 	} else if err != nil {
-		fmt.Printf("Error checking worktree path '%s': %v\n", worktreePath, err)
+		log.Errorf("checking worktree path '%s': %v", worktreePath, err)
 		return
 	}
 
 	if !silent {
-		fmt.Printf("Switching to worktree at '%s'\n", worktreePath)
+		log.Infof("Switching to worktree at '%s'\n", worktreePath)
 	}
 
 	// Determine the user's shell
@@ -150,7 +150,7 @@ func SwitchToWorktree(branchName string, orgRepo string, worktreeDir string, sil
 	cmdShell.Stderr = os.Stderr
 
 	if err := cmdShell.Run(); err != nil {
-		fmt.Printf("Error starting shell in worktree: %v\n", err)
+		log.Errorf("starting shell in worktree: %v", err)
 		return
 	}
 }

@@ -94,12 +94,7 @@ func getConfigPath() (string, error) {
 	// Migration logic: if old file exists and new file does not, move it
 	if _, errOld := os.Stat(oldPath); errOld == nil {
 		if _, errNew := os.Stat(newPath); os.IsNotExist(errNew) {
-			errMv := os.Rename(oldPath, newPath)
-			if errMv == nil {
-				fmt.Printf("State file migrated from %s to %s\n", oldPath, newPath)
-			} else {
-				fmt.Printf("[ERROR] Failed to migrate state file: %v\n", errMv)
-			}
+			_ = os.Rename(oldPath, newPath)
 		}
 	}
 

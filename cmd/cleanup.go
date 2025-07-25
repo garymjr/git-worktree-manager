@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ This helps keep the worktree state file clean and accurate.`,
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
@@ -27,7 +26,7 @@ This helps keep the worktree state file clean and accurate.`,
 		// Clean up stale entries
 		err = stateManager.CleanupStaleEntries()
 		if err != nil {
-			fmt.Printf("Error cleaning up stale entries: %v\n", err)
+			log.Errorf("cleaning up stale entries: %v", err)
 			return
 		}
 
@@ -36,12 +35,10 @@ This helps keep the worktree state file clean and accurate.`,
 		removedCount := beforeCount - afterCount
 
 		if removedCount > 0 {
-			fmt.Printf("Cleaned up %d stale worktree entries\n", removedCount)
+			log.Infof("Cleaned up %d stale worktree entries\n", removedCount)
 		} else {
-			fmt.Println("No stale entries found")
+			log.Info("No stale entries found\n")
 		}
-
-		fmt.Printf("Total managed worktrees: %d\n", afterCount)
 	},
 }
 

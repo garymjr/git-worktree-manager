@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ var removeCmd = &cobra.Command{
 		// Get the current Git repository root
 		gitRootBytes, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
 		if err != nil {
-			fmt.Printf("Error getting git repository root: %v\n", err)
+			log.Errorf("getting git repository root: %v", err)
 			return
 		}
 		gitRoot := strings.TrimSpace(string(gitRootBytes))
@@ -32,7 +32,7 @@ var removeCmd = &cobra.Command{
 		// Get the remote URL
 		remoteURLBytes, err := exec.Command("git", "config", "--get", "remote.origin.url").Output()
 		if err != nil {
-			fmt.Printf("Error getting remote origin URL: %v\n", err)
+			log.Errorf("getting remote origin URL: %v", err)
 			return
 		}
 		remoteURL := strings.TrimSpace(string(remoteURLBytes))
@@ -40,14 +40,14 @@ var removeCmd = &cobra.Command{
 		// Parse organization/username and repo name from remote URL
 		orgRepo := ParseRemoteURL(remoteURL)
 		if orgRepo == "" {
-			fmt.Printf("Could not parse organization/username and repository name from remote URL: %s\n", remoteURL)
+			log.Errorf("could not parse organization/username and repository name from remote URL: %s", remoteURL)
 			return
-	}
+		}
 
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
@@ -55,7 +55,7 @@ var removeCmd = &cobra.Command{
 		entry, exists := stateManager.GetWorktree(orgRepo, branchName)
 		if !exists {
 			// Fall back to old behavior if not found in state
-			fmt.Printf("Worktree for branch '%s' not registered\n", branchName)
+			log.Warnf("worktree for branch '%s' not registered", branchName)
 			return
 		}
 
@@ -64,16 +64,16 @@ var removeCmd = &cobra.Command{
 		// Remove from state
 		err = stateManager.RemoveWorktree(orgRepo, branchName)
 		if err != nil {
-			fmt.Printf("Error removing worktree from state: %v\n", err)
+			log.Errorf("removing worktree from state: %v", err)
 		}
 
 		// Check if the worktree directory exists before attempting to remove
 		_, err = os.Stat(worktreePath)
 		if os.IsNotExist(err) {
-			fmt.Printf("Worktree for branch '%s' not found at '%s'\n", branchName, worktreePath)
+			log.Warnf("worktree for branch '%s' not found at '%s'", branchName, worktreePath)
 			return
 		} else if err != nil {
-			fmt.Printf("Error checking worktree path '%s': %v\n", worktreePath, err)
+			log.Errorf("checking worktree path '%s': %v", worktreePath, err)
 			return
 		}
 
@@ -88,11 +88,10 @@ var removeCmd = &cobra.Command{
 		cmdRemoveWorktree.Dir = gitRoot // Ensure command runs in the git root
 		out, err := cmdRemoveWorktree.CombinedOutput()
 		if err != nil {
-			fmt.Printf("Error removing worktree at '%s': %v\nOutput: %s\n", worktreePath, err, out)
+			log.Errorf("removing worktree at '%s': %v\nOutput: %s", worktreePath, err, out)
 			return
 		}
 
-		var successMsg string
 		if removeBranch {
 			branchRemoveArgs := []string{"branch"}
 			if forceRemove {
@@ -106,14 +105,13 @@ var removeCmd = &cobra.Command{
 			cmdRemoveBranch.Dir = gitRoot // Ensure command runs in the git root
 			out, err := cmdRemoveBranch.CombinedOutput()
 			if err != nil {
-				fmt.Printf("Error removing branch '%s': %v\nOutput: %s\n", branchName, err, out)
+				log.Errorf("removing branch '%s': %v\nOutput: %s", branchName, err, out)
 				return
 			}
-			successMsg = fmt.Sprintf("Successfully removed worktree at '%s' and branch '%s'", worktreePath, branchName)
+			log.Infof("Successfully removed worktree at '%s' and branch '%s'\n", worktreePath, branchName)
 		} else {
-			successMsg = fmt.Sprintf("Successfully removed worktree at '%s'", worktreePath)
+			log.Infof("Successfully removed worktree at '%s'\n", worktreePath)
 		}
-		fmt.Println(successMsg)
 	},
 }
 

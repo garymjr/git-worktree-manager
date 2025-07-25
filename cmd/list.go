@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/garymjr/git-worktree-manager/pkg/log"
 	"github.com/garymjr/git-worktree-manager/pkg/state"
 	"github.com/spf13/cobra"
 )
@@ -18,26 +19,26 @@ var listCmd = &cobra.Command{
 		// Initialize state manager
 		stateManager, err := state.NewStateManager()
 		if err != nil {
-			fmt.Printf("Error initializing state manager: %v\n", err)
+			log.Errorf("initializing state manager: %v", err)
 			return
 		}
 
 		// Get the current working directory to identify the active worktree
 		currentDir, err := exec.Command("pwd").Output()
 		if err != nil {
-			fmt.Printf("Error getting current directory: %v\n", err)
+			log.Errorf("getting current directory: %v", err)
 			return
 		}
 		currentDirPath := strings.TrimSpace(string(currentDir))
 
 		// Get managed worktrees from state
 		managedWorktrees := stateManager.ListWorktrees()
-		
+
 		// Execute 'git worktree list --porcelain' to get actual git worktrees
 		gitWorktreeListCmd := exec.Command("git", "worktree", "list", "--porcelain")
 		output, err := gitWorktreeListCmd.Output()
 		if err != nil {
-			fmt.Printf("Error listing worktrees: %v\n", err)
+			log.Errorf("listing worktrees: %v", err)
 			return
 		}
 
@@ -85,7 +86,7 @@ var listCmd = &cobra.Command{
 			return managedWorktrees[i].BranchName < managedWorktrees[j].BranchName
 		})
 
-		fmt.Println("Managed Worktrees:")
+		log.Info("Managed Worktrees:\n")
 		for _, entry := range managedWorktrees {
 			indicator := "  "
 			if strings.HasPrefix(currentDirPath, entry.Path) {
@@ -97,19 +98,19 @@ var listCmd = &cobra.Command{
 				status = "✗" // Not found in git (stale)
 			}
 
-			fmt.Printf("%s%s (%s) [%s] %s\n", indicator, entry.Path, entry.BranchName, entry.GitRepo, status)
+			log.Infof("%s%s (%s) [%s] %s\n", indicator, entry.Path, entry.BranchName, entry.GitRepo, status)
 			delete(gitWorktrees, entry.Path) // Remove from map to find unmanaged
 		}
 
 		// Show any git worktrees not managed by our tool
 		if len(gitWorktrees) > 0 {
-			fmt.Println("\nUnmanaged Git Worktrees:")
+			log.Info("\nUnmanaged Git Worktrees:\n")
 			for path, branch := range gitWorktrees {
 				indicator := "  "
 				if strings.HasPrefix(currentDirPath, path) {
 					indicator = "* "
 				}
-				fmt.Printf("%s%s (%s) [unmanaged]\n", indicator, path, branch)
+				log.Infof("%s%s (%s) [unmanaged]\n", indicator, path, branch)
 			}
 		}
 	},
